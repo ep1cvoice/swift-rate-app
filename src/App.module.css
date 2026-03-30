@@ -1,0 +1,77 @@
+.app {
+  display: flex;
+  height: 100vh;
+  min-height: 600px;
+  background: #1A0A3E;
+  overflow: hidden;
+  font-family: 'Geist', system-ui, sans-serif;
+}
+
+.rightPanel {
+  width: 520px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-y: auto;
+}
+
+@media (min-width: 769px) and (max-width: 1199px) {
+  .app {
+    flex-direction: column;
+    height: auto;
+    min-height: 100svh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .rightPanel {
+    width: 100%;
+    border-left: none;
+    border-top: none;
+    overflow-y: visible;
+    padding: 32px 64px;
+    box-sizing: border-box;
+  }
+
+  .panelDivider {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+    height: auto;
+    min-height: 100svh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .rightPanel {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-y: visible;
+  }
+}
+
+.rightPanel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.rightPanel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rightPanel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.panelDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
