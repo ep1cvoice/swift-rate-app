@@ -2,6 +2,10 @@
 
 Kalkulator walutowy oparty na oficjalnych kursach Europejskiego Banku Centralnego. Dane pobierane przez [Frankfurter API](https://www.frankfurter.app/).
 
+App is [live on Vercel](https://swift-rate-app.vercel.app/).
+
+![Preview](./public/assets/preview1.png)
+
 ## Funkcje
 
 - Przeliczanie kwot między 31 walutami EBC
