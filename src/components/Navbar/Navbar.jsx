@@ -8,12 +8,6 @@ export default function Navbar() {
         <Zap size={24} className={styles.logoIcon} strokeWidth={2.5} />
         <span className={styles.logoText}>SwiftRate</span>
       </div>
-      <div className={styles.navRight}>
-        <a href="#" className={styles.navLink}>Kursy walut</a>
-        <a href="#" className={styles.navLink}>O nas</a>
-        <a href="#" className={styles.navLink}>Kontakt</a>
-        <button className={styles.loginBtn}>Zaloguj się</button>
-      </div>
     </nav>
   )
 }

@@ -1,0 +1,37 @@
+const CURRENCY_NAMES_PL = {
+  AUD: 'Dolar australijski',
+  BGN: 'Lew bułgarski',
+  BRL: 'Real brazylijski',
+  CAD: 'Dolar kanadyjski',
+  CHF: 'Frank szwajcarski',
+  CNY: 'Juan chiński',
+  CZK: 'Korona czeska',
+  DKK: 'Korona duńska',
+  EUR: 'Euro',
+  GBP: 'Funt szterling',
+  HKD: 'Dolar hongkoński',
+  HUF: 'Forint węgierski',
+  IDR: 'Rupia indonezyjska',
+  ILS: 'Nowy szekel izraelski',
+  INR: 'Rupia indyjska',
+  ISK: 'Korona islandzka',
+  JPY: 'Jen japoński',
+  KRW: 'Won południowokoreański',
+  MXN: 'Peso meksykańskie',
+  MYR: 'Ringgit malezyjski',
+  NOK: 'Korona norweska',
+  NZD: 'Dolar nowozelandzki',
+  PHP: 'Peso filipińskie',
+  PLN: 'Złoty polski',
+  RON: 'Lej rumuński',
+  SEK: 'Korona szwedzka',
+  SGD: 'Dolar singapurski',
+  THB: 'Bat tajski',
+  TRY: 'Lira turecka',
+  USD: 'Dolar amerykański',
+  ZAR: 'Rand południowoafrykański',
+}
+
+export function getCurrencyName(code) {
+  return CURRENCY_NAMES_PL[code] ?? code
+}

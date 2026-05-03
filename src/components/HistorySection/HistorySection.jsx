@@ -1,8 +1,32 @@
+import { useState, useEffect } from 'react'
 import { History } from 'lucide-react'
-import { POPULAR_PAIRS } from '../../data'
+import { fetchRate } from '../../api/frankfurter'
 import styles from './HistorySection.module.css'
 
+const POPULAR_PAIRS = [
+  { from: 'USD', to: 'PLN' },
+  { from: 'EUR', to: 'PLN' },
+  { from: 'GBP', to: 'PLN' },
+  { from: 'USD', to: 'EUR' },
+]
+
 export default function HistorySection({ history, setHistory }) {
+  const [popularRates, setPopularRates] = useState({})
+
+  useEffect(() => {
+    Promise.all(
+      POPULAR_PAIRS.map(({ from, to }) =>
+        fetchRate(from, to)
+          .then(({ rate }) => ({ key: `${from}/${to}`, rate }))
+          .catch(() => ({ key: `${from}/${to}`, rate: null }))
+      )
+    ).then(results => {
+      const map = {}
+      results.forEach(({ key, rate }) => { map[key] = rate })
+      setPopularRates(map)
+    })
+  }, [])
+
   return (
     <div className={styles.historySection}>
       <div className={styles.histHeader}>
@@ -12,7 +36,7 @@ export default function HistorySection({ history, setHistory }) {
         </div>
         {history.length > 0
           ? <button className={styles.histAction} onClick={() => setHistory([])}>Wyczyść</button>
-          : <span className={styles.histAction}>Zobacz wszystkie</span>
+          : <span className={styles.histAction}>Aktualne</span>
         }
       </div>
 
@@ -32,7 +56,11 @@ export default function HistorySection({ history, setHistory }) {
                 <div className={styles.histLeft}>
                   <span className={styles.histConv}>{pair.from} / {pair.to}</span>
                 </div>
-                <span className={styles.histRate}>{pair.rate.toFixed(4)}</span>
+                <span className={styles.histRate}>
+                  {popularRates[`${pair.from}/${pair.to}`] != null
+                    ? popularRates[`${pair.from}/${pair.to}`].toFixed(4)
+                    : '…'}
+                </span>
               </div>
             ))
         }

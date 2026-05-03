@@ -1,6 +1,14 @@
 import { ArrowRight, ArrowUpDown, ChevronDown, TrendingUp, CircleCheck, X } from 'lucide-react'
-import { CURRENCIES, formatDate } from '../../data'
+import { formatDate } from '../../utils/format'
+import { getCurrencyName } from '../../utils/currencyNames'
 import styles from './Converter.module.css'
+
+const FALLBACK_CURRENCIES = [
+  'AUD', 'BGN', 'BRL', 'CAD', 'CHF', 'CNY', 'CZK', 'DKK',
+  'EUR', 'GBP', 'HKD', 'HUF', 'IDR', 'ILS', 'INR', 'ISK',
+  'JPY', 'KRW', 'MXN', 'MYR', 'NOK', 'NZD', 'PHP', 'PLN',
+  'RON', 'SEK', 'SGD', 'THB', 'TRY', 'USD', 'ZAR',
+]
 
 export default function Converter({
   amount, setAmount,
@@ -8,8 +16,17 @@ export default function Converter({
   to, setTo,
   result, setResult,
   handleConvert, handleSwap, handleClear,
-  unitRate,
+  unitRate, loading,
+  currencies,
 }) {
+  const currencyCodes = Object.keys(currencies).length > 0
+    ? Object.keys(currencies).sort()
+    : FALLBACK_CURRENCIES
+
+  function renderOption(c) {
+    return <option key={c} value={c}>{c} — {getCurrencyName(c)}</option>
+  }
+
   return (
     <div className={styles.converterArea}>
       <div className={styles.convHeader}>
@@ -38,9 +55,7 @@ export default function Converter({
               value={from}
               onChange={e => { setFrom(e.target.value); setResult(null) }}
             >
-              {CURRENCIES.map(c => (
-                <option key={c.code} value={c.code}>{c.code} - {c.name}</option>
-              ))}
+              {currencyCodes.map(renderOption)}
             </select>
             <ChevronDown size={16} className={styles.selectChev} />
           </div>
@@ -60,9 +75,7 @@ export default function Converter({
               value={to}
               onChange={e => { setTo(e.target.value); setResult(null) }}
             >
-              {CURRENCIES.map(c => (
-                <option key={c.code} value={c.code}>{c.code} - {c.name}</option>
-              ))}
+              {currencyCodes.map(renderOption)}
             </select>
             <ChevronDown size={16} className={styles.selectChev} />
           </div>
@@ -70,8 +83,8 @@ export default function Converter({
       </div>
 
       <div className={styles.btnRow}>
-        <button className={styles.convBtn} onClick={handleConvert}>
-          <span>Konwertuj</span>
+        <button className={styles.convBtn} onClick={handleConvert} disabled={loading}>
+          <span>{loading ? 'Ładowanie…' : 'Konwertuj'}</span>
           <ArrowRight size={18} />
         </button>
         {result && (
@@ -101,7 +114,7 @@ export default function Converter({
           </div>
           <div className={styles.rateHint}>
             <TrendingUp size={14} color="#A78BFA" />
-            <span>1 {from} = {unitRate.toFixed(4)} {to}</span>
+            <span>1 {from} = {(unitRate ?? 1).toFixed(4)} {to}</span>
           </div>
         </>
       )}

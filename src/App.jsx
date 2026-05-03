@@ -1,69 +1,90 @@
-import { useState } from 'react'
-import { convertAmount, formatDate } from './data'
-import HeroSide from './components/HeroSide/HeroSide'
-import Converter from './components/Converter/Converter'
-import HistorySection from './components/HistorySection/HistorySection'
-import styles from './App.module.css'
+import { useState, useEffect } from 'react';
+import HeroSide from './components/HeroSide/HeroSide';
+import Converter from './components/Converter/Converter';
+import HistorySection from './components/HistorySection/HistorySection';
+import styles from './App.module.css';
+import { useRates } from './hooks/useRates';
+import { fetchRate, fetchCurrencies } from './api/frankfurter';
+import { convert } from './services/currencyService';
+import { formatDate } from './utils/format';
 
 function App() {
-  const [amount, setAmount] = useState('')
-  const [from, setFrom] = useState('PLN')
-  const [to, setTo] = useState('USD')
-  const [result, setResult] = useState(null)
-  const [history, setHistory] = useState([])
+  const [amount, setAmount] = useState('');
+  const [from, setFrom] = useState('PLN');
+  const [to, setTo] = useState('USD');
+  const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [currencies, setCurrencies] = useState({});
 
-  function handleConvert() {
-    const num = parseFloat(amount)
-    if (isNaN(num) || num <= 0) return
-    const res = convertAmount(num, from, to)
-    const unitRate = convertAmount(1, from, to)
-    const entry = {
-      label: `${num} ${from} → ${res.toFixed(2)} ${to}`,
-      date: formatDate(new Date()),
-      rate: unitRate.toFixed(4),
+  const { rate: liveRate } = useRates(from, to);
+
+  useEffect(() => {
+    fetchCurrencies().then(setCurrencies).catch(console.error);
+  }, []);
+
+  async function handleConvert() {
+    const num = parseFloat(amount);
+    if (!num || !from || !to) return;
+    setLoading(true);
+    try {
+      const { rate, date } = await fetchRate(from, to);
+      const res = convert(num, rate);
+      const newResult = { amount: num, from, to, res, unitRate: rate, date };
+      setResult(newResult);
+      setHistory(prev => [
+        {
+          label: `${num} ${from} → ${res.toFixed(2)} ${to}`,
+          date: formatDate(date),
+          rate: `1 ${from} = ${rate.toFixed(4)} ${to}`,
+        },
+        ...prev.slice(0, 9),
+      ]);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-    setResult({ amount: num, from, to, res, unitRate, date: new Date() })
-    setHistory(prev => [entry, ...prev].slice(0, 5))
   }
 
   function handleSwap() {
-    setFrom(to)
-    setTo(from)
-    setResult(null)
+    setFrom(to);
+    setTo(from);
+    setResult(null);
   }
 
   function handleClear() {
-    setResult(null)
-    setAmount('')
+    setResult(null);
   }
-
-  const unitRate = convertAmount(1, from, to)
 
   return (
     <div className={styles.app}>
-      <HeroSide />
+      <HeroSide currencyCount={Object.keys(currencies).length || 33} />
 
       <aside className={styles.rightPanel}>
         <Converter
-          amount={amount} setAmount={setAmount}
-          from={from} setFrom={setFrom}
-          to={to} setTo={setTo}
-          result={result} setResult={setResult}
+          amount={amount}
+          setAmount={setAmount}
+          from={from}
+          setFrom={setFrom}
+          to={to}
+          setTo={setTo}
+          result={result}
+          setResult={setResult}
           handleConvert={handleConvert}
           handleSwap={handleSwap}
           handleClear={handleClear}
-          unitRate={unitRate}
+          unitRate={liveRate ?? result?.unitRate ?? 1}
+          loading={loading}
+          currencies={currencies}
         />
 
         <div className={styles.panelDivider} />
 
-        <HistorySection
-          history={history}
-          setHistory={setHistory}
-        />
+        <HistorySection history={history} setHistory={setHistory} />
       </aside>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
