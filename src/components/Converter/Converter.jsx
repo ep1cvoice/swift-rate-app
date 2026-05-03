@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpDown, ChevronDown, TrendingUp, CircleCheck, X } from 'lucide-react'
+import { ArrowRight, ArrowUpDown, ChevronDown, TrendingUp, CircleCheck, X, AlertCircle } from 'lucide-react'
 import { formatDate } from '../../utils/format'
 import { getCurrencyName } from '../../utils/currencyNames'
 import styles from './Converter.module.css'
@@ -16,7 +16,8 @@ export default function Converter({
   to, setTo,
   result, setResult,
   handleConvert, handleSwap, handleClear,
-  unitRate, loading,
+  unitRate, rateError, convertError,
+  loading,
   currencies,
 }) {
   const currencyCodes = Object.keys(currencies).length > 0
@@ -25,6 +26,16 @@ export default function Converter({
 
   function renderOption(c) {
     return <option key={c} value={c}>{c} — {getCurrencyName(c)}</option>
+  }
+
+  function renderRateHint() {
+    if (rateError) {
+      return <span className={styles.rateHintError}>Błąd pobierania kursu</span>
+    }
+    if (unitRate == null) {
+      return <span>Pobieranie kursu…</span>
+    }
+    return <span>1 {from} = {unitRate.toFixed(4)} {to}</span>
   }
 
   return (
@@ -87,14 +98,19 @@ export default function Converter({
           <span>{loading ? 'Ładowanie…' : 'Konwertuj'}</span>
           <ArrowRight size={18} />
         </button>
-        {result && (
+        {(result || convertError) && (
           <button className={styles.clearBtn} onClick={handleClear}>
             <X size={18} />
           </button>
         )}
       </div>
 
-      {result ? (
+      {convertError ? (
+        <div className={`${styles.resultBox} ${styles.resultError}`}>
+          <AlertCircle size={16} color="#F87171" flexShrink={0} />
+          <span className={styles.resultErrorText}>{convertError}</span>
+        </div>
+      ) : result ? (
         <div className={`${styles.resultBox} ${styles.resultFilled}`}>
           <div className={styles.resultMain}>
             {result.amount} {result.from} = {result.res.toFixed(2)} {result.to}
@@ -113,8 +129,8 @@ export default function Converter({
             <span className={styles.resultPlaceholderText}>Wynik pojawi się tutaj</span>
           </div>
           <div className={styles.rateHint}>
-            <TrendingUp size={14} color="#A78BFA" />
-            <span>1 {from} = {(unitRate ?? 1).toFixed(4)} {to}</span>
+            <TrendingUp size={14} color={rateError ? '#F87171' : '#A78BFA'} />
+            {renderRateHint()}
           </div>
         </>
       )}

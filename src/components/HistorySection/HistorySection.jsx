@@ -12,6 +12,7 @@ const POPULAR_PAIRS = [
 
 export default function HistorySection({ history, setHistory }) {
   const [popularRates, setPopularRates] = useState({})
+  const [popularError, setPopularError] = useState(false)
 
   useEffect(() => {
     Promise.all(
@@ -23,7 +24,12 @@ export default function HistorySection({ history, setHistory }) {
     ).then(results => {
       const map = {}
       results.forEach(({ key, rate }) => { map[key] = rate })
-      setPopularRates(map)
+      const allFailed = results.every(r => r.rate === null)
+      if (allFailed) {
+        setPopularError(true)
+      } else {
+        setPopularRates(map)
+      }
     })
   }, [])
 
@@ -51,7 +57,13 @@ export default function HistorySection({ history, setHistory }) {
                 <span className={styles.histRate}>{item.rate}</span>
               </div>
             ))
-          : POPULAR_PAIRS.map((pair, i) => (
+          : popularError
+            ? (
+              <div className={styles.histError}>
+                Nie udało się pobrać kursów. Sprawdź połączenie.
+              </div>
+            )
+            : POPULAR_PAIRS.map((pair, i) => (
               <div className={styles.histRow} key={i}>
                 <div className={styles.histLeft}>
                   <span className={styles.histConv}>{pair.from} / {pair.to}</span>

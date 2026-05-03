@@ -232,6 +232,22 @@
   margin-top: 2px;
 }
 
+.resultError {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.resultErrorText {
+  font-family: 'Geist', sans-serif;
+  font-size: 13px;
+  color: #FCA5A5;
+  line-height: 1.4;
+}
+
 .rateHint {
   display: flex;
   align-items: center;
@@ -240,6 +256,10 @@
   font-family: 'Geist', sans-serif;
   font-size: 12px;
   color: #B8A9D4;
+}
+
+.rateHintError {
+  color: #F87171;
 }
 
 @media (min-width: 769px) and (max-width: 1199px) {

@@ -15,9 +15,10 @@ function App() {
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [convertError, setConvertError] = useState(null);
   const [currencies, setCurrencies] = useState({});
 
-  const { rate: liveRate } = useRates(from, to);
+  const { rate: liveRate, error: rateError } = useRates(from, to);
 
   useEffect(() => {
     fetchCurrencies().then(setCurrencies).catch(console.error);
@@ -27,6 +28,7 @@ function App() {
     const num = parseFloat(amount);
     if (!num || !from || !to) return;
     setLoading(true);
+    setConvertError(null);
     try {
       const { rate, date } = await fetchRate(from, to);
       const res = convert(num, rate);
@@ -40,8 +42,8 @@ function App() {
         },
         ...prev.slice(0, 9),
       ]);
-    } catch (e) {
-      console.error(e);
+    } catch {
+      setConvertError('Nie udało się pobrać kursu. Sprawdź połączenie i spróbuj ponownie.');
     } finally {
       setLoading(false);
     }
@@ -51,10 +53,12 @@ function App() {
     setFrom(to);
     setTo(from);
     setResult(null);
+    setConvertError(null);
   }
 
   function handleClear() {
     setResult(null);
+    setConvertError(null);
   }
 
   return (
@@ -74,7 +78,9 @@ function App() {
           handleConvert={handleConvert}
           handleSwap={handleSwap}
           handleClear={handleClear}
-          unitRate={liveRate ?? result?.unitRate ?? 1}
+          unitRate={liveRate ?? result?.unitRate ?? null}
+          rateError={rateError}
+          convertError={convertError}
           loading={loading}
           currencies={currencies}
         />

@@ -100,3 +100,14 @@
   font-weight: 600;
   color: #A78BFA;
 }
+
+.histError {
+  font-family: 'Geist', sans-serif;
+  font-size: 13px;
+  color: #FCA5A5;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  line-height: 1.4;
+}
