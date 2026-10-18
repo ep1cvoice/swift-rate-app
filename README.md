@@ -69,8 +69,14 @@ src/
 │   └── Navbar/               # Logo
 ├── hooks/
 │   └── useRates.js           # Kurs jednostkowy w czasie rzeczywistym
-├── services/
-│   └── currencyService.js    # Przeliczenie kwoty (amount × rate)
+├── models/                   # Warstwa obiektowa (klasy)
+│   ├── errors.js             # AppError → ValidationError / ApiError
+│   ├── RateProvider.js       # Abstrakcyjne źródło kursu
+│   ├── ApiRateProvider.js    # Kurs EBC z API (cache, dispose())
+│   ├── ManualRateProvider.js # Kurs podany ręcznie
+│   ├── Conversion.js         # Wynik pojedynczej konwersji
+│   ├── ConversionHistory.js  # Historia ostatnich konwersji
+│   └── CurrencyConverter.js  # Walidacja i przeliczenie kwoty
 ├── utils/
 │   ├── currencyNames.js      # Polskie nazwy walut
 │   └── format.js             # Formatowanie daty DD.MM.YYYY

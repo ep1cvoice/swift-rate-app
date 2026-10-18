@@ -15,6 +15,8 @@ export default function Converter({
   from, setFrom,
   to, setTo,
   result, setResult,
+  rateMode, onRateModeChange,
+  manualRate, setManualRate,
   handleConvert, handleSwap, handleClear,
   unitRate, rateError, convertError,
   loading,
@@ -29,6 +31,9 @@ export default function Converter({
   }
 
   function renderRateHint() {
+    if (rateMode === 'manual' && unitRate == null) {
+      return <span>Wpisz kurs, aby przeliczyć</span>
+    }
     if (rateError) {
       return <span className={styles.rateHintError}>Błąd pobierania kursu</span>
     }
@@ -43,6 +48,25 @@ export default function Converter({
       <div className={styles.convHeader}>
         <h2 className={styles.convTitle}>Przelicznik walut</h2>
         <p className={styles.convSubtitle}>Szybka konwersja walut w czasie rzeczywistym</p>
+      </div>
+
+      <div className={styles.modeSwitch} role="group" aria-label="Źródło kursu">
+        <button
+          type="button"
+          className={`${styles.modeBtn} ${rateMode === 'api' ? styles.modeBtnActive : ''}`}
+          aria-pressed={rateMode === 'api'}
+          onClick={() => onRateModeChange('api')}
+        >
+          Kurs EBC (na żywo)
+        </button>
+        <button
+          type="button"
+          className={`${styles.modeBtn} ${rateMode === 'manual' ? styles.modeBtnActive : ''}`}
+          aria-pressed={rateMode === 'manual'}
+          onClick={() => onRateModeChange('manual')}
+        >
+          Kurs ręczny
+        </button>
       </div>
 
       <div className={styles.field}>
@@ -93,6 +117,21 @@ export default function Converter({
         </div>
       </div>
 
+      {rateMode === 'manual' && (
+        <div className={styles.field}>
+          <label className={styles.fieldLabel}>Kurs: 1 {from} = ? {to}</label>
+          <input
+            className={styles.fieldInput}
+            type="text"
+            inputMode="decimal"
+            placeholder="np. 0.2750"
+            value={manualRate}
+            onChange={e => { setManualRate(e.target.value); setResult(null) }}
+            onKeyDown={e => e.key === 'Enter' && handleConvert()}
+          />
+        </div>
+      )}
+
       <div className={styles.btnRow}>
         <button className={styles.convBtn} onClick={handleConvert} disabled={loading}>
           <span>{loading ? 'Ładowanie…' : 'Konwertuj'}</span>
@@ -113,14 +152,12 @@ export default function Converter({
       ) : result ? (
         <div className={`${styles.resultBox} ${styles.resultFilled}`}>
           <div className={styles.resultMain}>
-            {result.amount} {result.from} = {result.res.toFixed(2)} {result.to}
+            {result.amount} {result.from} = {result.converted.toFixed(2)} {result.to}
           </div>
-          <div className={styles.resultSub}>
-            1 {result.from} = {result.unitRate.toFixed(4)} {result.to}
-          </div>
+          <div className={styles.resultSub}>{result.rateLabel}</div>
           <div className={styles.resultDate}>
             <CircleCheck size={12} color="#22C55E" />
-            <span>Kurs z {formatDate(result.date)}</span>
+            <span>{result.isManual ? 'Kurs podany ręcznie' : `Kurs EBC z ${formatDate(result.date)}`}</span>
           </div>
         </div>
       ) : (

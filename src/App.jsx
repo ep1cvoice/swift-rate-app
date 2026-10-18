@@ -4,46 +4,56 @@ import Converter from './components/Converter/Converter';
 import HistorySection from './components/HistorySection/HistorySection';
 import styles from './App.module.css';
 import { useRates } from './hooks/useRates';
-import { fetchRate, fetchCurrencies } from './api/frankfurter';
-import { convert } from './services/currencyService';
-import { formatDate } from './utils/format';
+import { ApiRateProvider } from './models/ApiRateProvider';
+import { ManualRateProvider } from './models/ManualRateProvider';
+import { CurrencyConverter } from './models/CurrencyConverter';
+import { ConversionHistory } from './models/ConversionHistory';
+import { AppError } from './models/errors';
 
 function App() {
+  const [apiProvider] = useState(() => new ApiRateProvider());
+  const [rateMode, setRateMode] = useState('api');
+  const [manualRate, setManualRate] = useState('');
   const [amount, setAmount] = useState('');
   const [from, setFrom] = useState('PLN');
   const [to, setTo] = useState('USD');
   const [result, setResult] = useState(null);
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState(() => new ConversionHistory(10));
   const [loading, setLoading] = useState(false);
   const [convertError, setConvertError] = useState(null);
   const [currencies, setCurrencies] = useState({});
 
-  const { rate: liveRate, error: rateError } = useRates(from, to);
+  const { rate: liveRate, error: rateError } = useRates(apiProvider, from, to);
+
+  // "Destructor": release the provider's resources when the app unmounts.
+  useEffect(() => () => apiProvider.dispose(), [apiProvider]);
 
   useEffect(() => {
-    fetchCurrencies().then(setCurrencies).catch(console.error);
-  }, []);
+    let cancelled = false;
+    apiProvider.getCurrencies()
+      .then(data => { if (!cancelled) setCurrencies(data); })
+      .catch(err => { if (!cancelled) console.error(err); });
+    return () => { cancelled = true; };
+  }, [apiProvider]);
 
   async function handleConvert() {
-    const num = parseFloat(amount);
-    if (!num || !from || !to) return;
     setLoading(true);
     setConvertError(null);
     try {
-      const { rate, date } = await fetchRate(from, to);
-      const res = convert(num, rate);
-      const newResult = { amount: num, from, to, res, unitRate: rate, date };
-      setResult(newResult);
-      setHistory(prev => [
-        {
-          label: `${num} ${from} → ${res.toFixed(2)} ${to}`,
-          date: formatDate(date),
-          rate: `1 ${from} = ${rate.toFixed(4)} ${to}`,
-        },
-        ...prev.slice(0, 9),
-      ]);
-    } catch {
-      setConvertError('Nie udało się pobrać kursu. Sprawdź połączenie i spróbuj ponownie.');
+      const provider = rateMode === 'manual'
+        ? ManualRateProvider.fromInput(manualRate)
+        : apiProvider;
+      const conversion = await new CurrencyConverter(provider).convert(amount, from, to);
+      setResult(conversion);
+      setHistory(prev => prev.add(conversion));
+    } catch (err) {
+      if (err instanceof AppError) {
+        setConvertError(err.userMessage);
+      } else {
+        console.error(err);
+        setConvertError('Wystąpił nieoczekiwany błąd. Spróbuj ponownie.');
+      }
+      setResult(null);
     } finally {
       setLoading(false);
     }
@@ -61,6 +71,17 @@ function App() {
     setConvertError(null);
   }
 
+  function handleRateModeChange(mode) {
+    setRateMode(mode);
+    setResult(null);
+    setConvertError(null);
+  }
+
+  const parsedManualRate = Number(manualRate.replace(',', '.'));
+  const unitRate = rateMode === 'manual'
+    ? (manualRate.trim() !== '' && parsedManualRate > 0 ? parsedManualRate : null)
+    : liveRate ?? result?.rate ?? null;
+
   return (
     <div className={styles.app}>
       <HeroSide currencyCount={Object.keys(currencies).length || 33} />
@@ -75,11 +96,15 @@ function App() {
           setTo={setTo}
           result={result}
           setResult={setResult}
+          rateMode={rateMode}
+          onRateModeChange={handleRateModeChange}
+          manualRate={manualRate}
+          setManualRate={setManualRate}
           handleConvert={handleConvert}
           handleSwap={handleSwap}
           handleClear={handleClear}
-          unitRate={liveRate ?? result?.unitRate ?? null}
-          rateError={rateError}
+          unitRate={unitRate}
+          rateError={rateMode === 'api' ? rateError : null}
           convertError={convertError}
           loading={loading}
           currencies={currencies}
@@ -87,7 +112,11 @@ function App() {
 
         <div className={styles.panelDivider} />
 
-        <HistorySection history={history} setHistory={setHistory} />
+        <HistorySection
+          history={history}
+          onClearHistory={() => setHistory(prev => prev.clear())}
+          rateProvider={apiProvider}
+        />
       </aside>
     </div>
   );
